@@ -1,0 +1,1148 @@
+@import 'katex/dist/katex.min.css';
+
+@layer base, theme, components, utilities;
+
+@layer theme {
+  :root {
+    color-scheme: light dark;
+
+    /* Typography design tokens */
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", sans-serif;
+    --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+    --font-mono: "SF Mono", ui-monospace, Menlo, Monaco, "JetBrains Mono", monospace;
+    --editor-font-size: 16px;
+    --editor-line-height: 1.78;
+    --editor-max-width: 780px;
+
+    /* Color pairs (fallback + modern light-dark()) */
+    --bg-canvas-light: #ffffff;
+    --bg-canvas-dark: #14161a;
+    --text-primary-light: #1d2129;
+    --text-primary-dark: #e6e9ef;
+    --text-secondary-light: #4e5969;
+    --text-secondary-dark: #a6b0c0;
+    --text-muted-light: #6b7687;
+    --text-muted-dark: #8691a4;
+    --text-faint-light: #9ca6b5;
+    --text-faint-dark: #5c6677;
+    --heading-light: #0f1419;
+    --heading-dark: #f4f6fa;
+    --accent-light: #0a6cff;
+    --accent-dark: #4da3ff;
+    --border-subtle-light: rgba(15, 23, 42, 0.085);
+    --border-subtle-dark: rgba(255, 255, 255, 0.1);
+    --surface-subtle-light: rgba(15, 23, 42, 0.032);
+    --surface-subtle-dark: rgba(255, 255, 255, 0.045);
+    --surface-hover-light: rgba(15, 23, 42, 0.055);
+    --surface-hover-dark: rgba(255, 255, 255, 0.07);
+    --surface-elevated-light: rgba(255, 255, 255, 0.9);
+    --surface-elevated-dark: rgba(30, 34, 42, 0.88);
+    --code-inline-bg-light: rgba(15, 23, 42, 0.055);
+    --code-inline-bg-dark: rgba(255, 255, 255, 0.09);
+    --code-inline-fg-light: #c7254e;
+    --code-inline-fg-dark: #ff8fa3;
+    --selection-light: rgba(10, 108, 255, 0.18);
+    --selection-dark: rgba(77, 163, 255, 0.28);
+    --highlight-bg-light: rgba(255, 224, 102, 0.48);
+    --highlight-bg-dark: rgba(250, 204, 21, 0.28);
+    --scrollbar-thumb-light: rgba(15, 23, 42, 0.28);
+    --scrollbar-thumb-dark: rgba(255, 255, 255, 0.28);
+
+    /* Syntax tokens */
+    --syntax-keyword-light: #ad26a2;
+    --syntax-keyword-dark: #e07be0;
+    --syntax-string-light: #c43d2c;
+    --syntax-string-dark: #ff9e80;
+    --syntax-number-light: #1c64d1;
+    --syntax-number-dark: #79b8ff;
+    --syntax-comment-light: #7c8798;
+    --syntax-comment-dark: #6d788a;
+    --syntax-func-light: #2b6cb0;
+    --syntax-func-dark: #82cfff;
+    --syntax-type-light: #0d7a72;
+    --syntax-type-dark: #5eead4;
+
+    /* Default light fallback before @media / light-dark() */
+    --bg-canvas: var(--bg-canvas-light);
+    --text-primary: var(--text-primary-light);
+    --text-secondary: var(--text-secondary-light);
+    --text-muted: var(--text-muted-light);
+    --text-faint: var(--text-faint-light);
+    --heading-color: var(--heading-light);
+    --accent: var(--accent-light);
+    --border-subtle: var(--border-subtle-light);
+    --surface-subtle: var(--surface-subtle-light);
+    --surface-hover: var(--surface-hover-light);
+    --surface-elevated: var(--surface-elevated-light);
+    --code-inline-bg: var(--code-inline-bg-light);
+    --code-inline-fg: var(--code-inline-fg-light);
+    --selection-bg: var(--selection-light);
+    --highlight-bg: var(--highlight-bg-light);
+    --scrollbar-thumb: var(--scrollbar-thumb-light);
+    --scrollbar-track: transparent;
+    --syntax-keyword: var(--syntax-keyword-light);
+    --syntax-string: var(--syntax-string-light);
+    --syntax-number: var(--syntax-number-light);
+    --syntax-comment: var(--syntax-comment-light);
+    --syntax-func: var(--syntax-func-light);
+    --syntax-type: var(--syntax-type-light);
+
+    @media (prefers-color-scheme: dark) {
+      --bg-canvas: var(--bg-canvas-dark);
+      --text-primary: var(--text-primary-dark);
+      --text-secondary: var(--text-secondary-dark);
+      --text-muted: var(--text-muted-dark);
+      --text-faint: var(--text-faint-dark);
+      --heading-color: var(--heading-dark);
+      --accent: var(--accent-dark);
+      --border-subtle: var(--border-subtle-dark);
+      --surface-subtle: var(--surface-subtle-dark);
+      --surface-hover: var(--surface-hover-dark);
+      --surface-elevated: var(--surface-elevated-dark);
+      --code-inline-bg: var(--code-inline-bg-dark);
+      --code-inline-fg: var(--code-inline-fg-dark);
+      --selection-bg: var(--selection-dark);
+      --highlight-bg: var(--highlight-bg-dark);
+      --scrollbar-thumb: var(--scrollbar-thumb-dark);
+      --syntax-keyword: var(--syntax-keyword-dark);
+      --syntax-string: var(--syntax-string-dark);
+      --syntax-number: var(--syntax-number-dark);
+      --syntax-comment: var(--syntax-comment-dark);
+      --syntax-func: var(--syntax-func-dark);
+      --syntax-type: var(--syntax-type-dark);
+    }
+
+    @supports (color: light-dark(white, black)) {
+      --bg-canvas: light-dark(var(--bg-canvas-light), var(--bg-canvas-dark));
+      --text-primary: light-dark(var(--text-primary-light), var(--text-primary-dark));
+      --text-secondary: light-dark(var(--text-secondary-light), var(--text-secondary-dark));
+      --text-muted: light-dark(var(--text-muted-light), var(--text-muted-dark));
+      --text-faint: light-dark(var(--text-faint-light), var(--text-faint-dark));
+      --heading-color: light-dark(var(--heading-light), var(--heading-dark));
+      --accent: light-dark(var(--accent-light), var(--accent-dark));
+      --border-subtle: light-dark(var(--border-subtle-light), var(--border-subtle-dark));
+      --surface-subtle: light-dark(var(--surface-subtle-light), var(--surface-subtle-dark));
+      --surface-hover: light-dark(var(--surface-hover-light), var(--surface-hover-dark));
+      --surface-elevated: light-dark(var(--surface-elevated-light), var(--surface-elevated-dark));
+      --code-inline-bg: light-dark(var(--code-inline-bg-light), var(--code-inline-bg-dark));
+      --code-inline-fg: light-dark(var(--code-inline-fg-light), var(--code-inline-fg-dark));
+      --selection-bg: light-dark(var(--selection-light), var(--selection-dark));
+      --highlight-bg: light-dark(var(--highlight-bg-light), var(--highlight-bg-dark));
+      --scrollbar-thumb: light-dark(var(--scrollbar-thumb-light), var(--scrollbar-thumb-dark));
+      --syntax-keyword: light-dark(var(--syntax-keyword-light), var(--syntax-keyword-dark));
+      --syntax-string: light-dark(var(--syntax-string-light), var(--syntax-string-dark));
+      --syntax-number: light-dark(var(--syntax-number-light), var(--syntax-number-dark));
+      --syntax-comment: light-dark(var(--syntax-comment-light), var(--syntax-comment-dark));
+      --syntax-func: light-dark(var(--syntax-func-light), var(--syntax-func-dark));
+      --syntax-type: light-dark(var(--syntax-type-light), var(--syntax-type-dark));
+    }
+
+    accent-color: var(--accent);
+  }
+
+  /* Explicit theme overrides controlled by Swift Liquid Glass settings */
+  body[data-theme="light"] {
+    color-scheme: light;
+    --bg-canvas: #ffffff;
+  }
+
+  body[data-theme="dark"] {
+    color-scheme: dark;
+    --bg-canvas: #14161a;
+  }
+
+  body[data-theme="paper"] {
+    color-scheme: light;
+    --bg-canvas: #f8f5ee;
+    --text-primary: #2c2822;
+    --heading-color: #1a1612;
+    --surface-subtle: rgba(65, 52, 34, 0.045);
+    --border-subtle: rgba(65, 52, 34, 0.11);
+  }
+
+  body[data-theme="translucent"] {
+    /* Let macOS native Liquid Glass / visual effect surface shine gently underneath */
+    --bg-canvas: transparent;
+  }
+}
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: hidden;
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--selection-bg);
+  }
+}
+
+@layer components {
+  .lepora-shell {
+    position: relative;
+    inline-size: 100%;
+    block-size: 100%;
+    background: transparent;
+  }
+
+  .editor-host {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    opacity: 1;
+    transition: opacity 160ms ease;
+    -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 10px,
+      black 56px,
+      black 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 10px,
+      black 56px,
+      black 100%
+    );
+  }
+
+  .editor-host[hidden] {
+    display: none;
+  }
+
+  @supports not (scrollbar-color: auto) {
+    .editor-host {
+      scrollbar-width: auto;
+    }
+
+    .editor-host::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .editor-host::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-thumb);
+      border-radius: 999px;
+    }
+
+    .editor-host::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+    }
+  }
+
+  /* Main Typora-inspired minimalist writing canvas */
+  .lepora-prose {
+    box-sizing: border-box;
+    max-inline-size: calc(var(--editor-max-width) + 96px);
+    margin-inline: auto;
+    padding-block: 74px 42vh;
+    padding-inline: 48px;
+    min-block-size: 100%;
+    outline: none;
+    font-size: var(--editor-font-size);
+    line-height: var(--editor-line-height);
+    color: var(--text-primary);
+    caret-color: var(--accent);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Focus Mode: dim every top-level block smoothly except the active block */
+  body.focus-mode .lepora-prose > * {
+    opacity: 0.24;
+    transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  body.focus-mode .lepora-prose > .is-focused-block,
+  body.focus-mode .lepora-prose > .lepora-display-math.is-editing,
+  body.focus-mode .lepora-prose > .lepora-mermaid-block.is-editing {
+    opacity: 1;
+  }
+
+  /* Placeholder */
+  .lepora-prose p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--text-faint);
+    float: inline-start;
+    block-size: 0;
+    pointer-events: none;
+  }
+
+  /* Headings */
+  .lepora-prose :is(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-display);
+    color: var(--heading-color);
+    font-weight: 680;
+    letter-spacing: -0.02em;
+    line-height: 1.32;
+    margin-block: 1.55em 0.55em;
+    scroll-margin-top: 72px;
+  }
+
+  .lepora-prose h1:first-child {
+    margin-block-start: 0.2em;
+  }
+
+  .lepora-prose h1 {
+    font-size: 2.05em;
+    font-weight: 730;
+    letter-spacing: -0.028em;
+    padding-block-end: 0.28em;
+    border-block-end: 1px solid var(--border-subtle);
+  }
+
+  .lepora-prose h2 {
+    font-size: 1.52em;
+    padding-block-end: 0.2em;
+    border-block-end: 1px solid var(--border-subtle);
+  }
+
+  .lepora-prose h3 {
+    font-size: 1.25em;
+  }
+
+  .lepora-prose h4 {
+    font-size: 1.08em;
+  }
+
+  .lepora-prose h5 {
+    font-size: 0.98em;
+    color: var(--text-secondary);
+  }
+
+  .lepora-prose h6 {
+    font-size: 0.9em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Paragraphs & inline marks */
+  .lepora-prose p {
+    margin-block: 0.72em;
+  }
+
+  .lepora-prose strong {
+    font-weight: 660;
+    color: var(--heading-color);
+  }
+
+  .lepora-prose a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    cursor: pointer;
+    transition: text-decoration-color 140ms ease;
+  }
+
+  .lepora-prose a:hover {
+    text-decoration-color: var(--accent);
+  }
+
+  .lepora-prose code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--code-inline-bg);
+    color: var(--code-inline-fg);
+    padding: 0.14em 0.42em;
+    border-radius: 6px;
+  }
+
+  .lepora-prose mark {
+    background: var(--highlight-bg);
+    color: inherit;
+    padding: 0.06em 0.24em;
+    border-radius: 4px;
+  }
+
+  .lepora-prose hr {
+    border: none;
+    block-size: 1px;
+    background: var(--border-subtle);
+    margin-block: 2.1em;
+  }
+
+  /* Blockquotes */
+  .lepora-prose blockquote {
+    margin-block: 1.1em;
+    margin-inline: 0;
+    padding-block: 0.22em;
+    padding-inline: 1.15em 0.6em;
+    border-inline-start: 3px solid color-mix(in srgb, var(--accent) 48%, var(--border-subtle));
+    color: var(--text-secondary);
+  }
+
+  .lepora-prose blockquote > p:first-child {
+    margin-block-start: 0.2em;
+  }
+
+  .lepora-prose blockquote > p:last-child {
+    margin-block-end: 0.2em;
+  }
+
+  /* GitHub Alert Callouts */
+  .lepora-callout {
+    --callout-accent: #0a6cff;
+    --callout-label: "NOTE";
+    margin-block: 1.2em;
+    padding: 0.85em 1.15em;
+    border-radius: 12px;
+    border-inline-start: 3.5px solid var(--callout-accent);
+    background: color-mix(in srgb, var(--callout-accent) 7%, transparent);
+  }
+
+  .lepora-callout::before {
+    content: var(--callout-label);
+    display: block;
+    font-size: 0.76em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--callout-accent);
+    margin-block-end: 0.35em;
+  }
+
+  .lepora-callout.callout-tip {
+    --callout-accent: #16a34a;
+    --callout-label: "TIP";
+  }
+
+  .lepora-callout.callout-important {
+    --callout-accent: #8b5cf6;
+    --callout-label: "IMPORTANT";
+  }
+
+  .lepora-callout.callout-warning {
+    --callout-accent: #d97706;
+    --callout-label: "WARNING";
+  }
+
+  .lepora-callout.callout-caution {
+    --callout-accent: #dc2626;
+    --callout-label: "CAUTION";
+  }
+
+  .lepora-callout > p:first-child {
+    margin-block-start: 0;
+  }
+
+  .lepora-callout > p:last-child {
+    margin-block-end: 0;
+  }
+
+  /* Lists & Task Lists (using modern :has() for checked state) */
+  .lepora-prose :is(ul, ol) {
+    margin-block: 0.75em;
+    padding-inline-start: 1.65em;
+  }
+
+  .lepora-prose li {
+    margin-block: 0.26em;
+  }
+
+  .lepora-prose li > p {
+    margin-block: 0.22em;
+  }
+
+  .lepora-prose ul[data-type="taskList"] {
+    list-style: none;
+    padding-inline-start: 0.2em;
+  }
+
+  .lepora-prose ul[data-type="taskList"] li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6em;
+    margin-block: 0.32em;
+  }
+
+  .lepora-prose ul[data-type="taskList"] li > label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    block-size: calc(1em * var(--editor-line-height));
+    margin: 0;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .lepora-prose ul[data-type="taskList"] li > label input[type="checkbox"] {
+    inline-size: 15.5px;
+    block-size: 15.5px;
+    margin: 0;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+
+  .lepora-prose ul[data-type="taskList"] li > div {
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .lepora-prose ul[data-type="taskList"] li > div > p {
+    margin-block: 0;
+  }
+
+  .lepora-prose ul[data-type="taskList"] li > div > p + p {
+    margin-block-start: 0.35em;
+  }
+
+  .lepora-prose ul[data-type="taskList"] li:has(> label > input:checked) > div {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-faint);
+  }
+
+  .lepora-prose ul[data-type="taskList"] li:has(> label > input:checked) > div strong {
+    color: inherit;
+  }
+
+  /* Code Blocks */
+  .lepora-code-block {
+    position: relative;
+    margin-block: 1.25em;
+    border-radius: 12px;
+    background: var(--surface-subtle);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+  }
+
+  .code-block-toolbar {
+    position: absolute;
+    inset-block-start: 8px;
+    inset-inline-end: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 160ms ease;
+    z-index: 2;
+  }
+
+  .lepora-code-block:is(:hover, :focus-within) .code-block-toolbar {
+    opacity: 1;
+  }
+
+  .code-lang-select,
+  .code-copy-btn {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--surface-elevated);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 7px;
+    padding: 3px 8px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .code-copy-btn:hover,
+  .code-lang-select:hover {
+    color: var(--text-primary);
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--border-subtle));
+  }
+
+  .lepora-code-block pre {
+    margin: 0;
+    padding: 1.05em 1.25em;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.87em;
+    line-height: 1.62;
+    tab-size: 2;
+  }
+
+  .lepora-code-block pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+    border-radius: 0;
+  }
+
+  /* Highlight.js adaptive tokens */
+  .hljs-keyword,
+  .hljs-selector-tag,
+  .hljs-built_in {
+    color: var(--syntax-keyword);
+  }
+  .hljs-string,
+  .hljs-attr,
+  .hljs-template-tag {
+    color: var(--syntax-string);
+  }
+  .hljs-number,
+  .hljs-literal {
+    color: var(--syntax-number);
+  }
+  .hljs-comment,
+  .hljs-quote {
+    color: var(--syntax-comment);
+    font-style: italic;
+  }
+  .hljs-title,
+  .hljs-function {
+    color: var(--syntax-func);
+  }
+  .hljs-type,
+  .hljs-class .hljs-title {
+    color: var(--syntax-type);
+  }
+
+  /* GFM Tables */
+  .lepora-prose table {
+    border-collapse: separate;
+    border-spacing: 0;
+    inline-size: 100%;
+    margin-block: 1.35em;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 0.94em;
+  }
+
+  .lepora-prose :is(th, td) {
+    padding: 0.62em 0.9em;
+    border-block-end: 1px solid var(--border-subtle);
+    border-inline-end: 1px solid var(--border-subtle);
+    vertical-align: top;
+    min-inline-size: 64px;
+    position: relative;
+  }
+
+  .lepora-prose :is(th, td):last-child {
+    border-inline-end: none;
+  }
+
+  .lepora-prose tr:last-child :is(th, td) {
+    border-block-end: none;
+  }
+
+  .lepora-prose th {
+    background: var(--surface-subtle);
+    font-weight: 620;
+    color: var(--heading-color);
+    text-align: start;
+  }
+
+  .lepora-prose td > p,
+  .lepora-prose th > p {
+    margin: 0;
+  }
+
+  .lepora-prose .selectedCell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    pointer-events: none;
+  }
+
+  /* Contextual Table Floating Toolbar */
+  .table-toolbar {
+    position: fixed;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 6px;
+    border-radius: 999px;
+    background: var(--surface-elevated);
+    backdrop-filter: blur(22px) saturate(1.8);
+    -webkit-backdrop-filter: blur(22px) saturate(1.8);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+    animation: popIn 140ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .table-toolbar[hidden] {
+    display: none;
+  }
+
+  .table-toolbar button {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 11.5px;
+    font-weight: 520;
+    padding: 4px 7px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+  }
+
+  .table-toolbar button:hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+  }
+
+  .table-toolbar button.danger:hover {
+    background: rgba(220, 38, 38, 0.14);
+    color: #ef4444;
+  }
+
+  .toolbar-sep {
+    inline-size: 1px;
+    block-size: 14px;
+    background: var(--border-subtle);
+    margin-inline: 2px;
+  }
+
+  /* Inline Math */
+  .lepora-inline-math {
+    display: inline-block;
+    padding: 0 3px;
+    border-radius: 5px;
+    cursor: pointer;
+    vertical-align: baseline;
+    transition: background 130ms ease;
+  }
+
+  .lepora-inline-math:hover,
+  .lepora-inline-math.ProseMirror-selectednode {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  .lepora-inline-math mjx-container {
+    display: inline-block !important;
+    margin: 0 !important;
+  }
+
+  .lepora-inline-math svg {
+    vertical-align: -0.15em;
+    max-inline-size: 100%;
+  }
+
+  /* Floating Inline Math Popover (Typora style) */
+  .inline-math-popover {
+    position: fixed;
+    z-index: 50;
+    min-inline-size: 280px;
+    max-inline-size: min(560px, calc(100vw - 32px));
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: var(--surface-elevated);
+    backdrop-filter: blur(24px) saturate(1.9);
+    -webkit-backdrop-filter: blur(24px) saturate(1.9);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.16);
+    animation: popIn 140ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .inline-math-popover[hidden] {
+    display: none;
+  }
+
+  .inline-math-preview {
+    min-block-size: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px 10px;
+    border-block-end: 1px solid var(--border-subtle);
+    margin-block-end: 8px;
+    overflow-x: auto;
+  }
+
+  .inline-math-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .math-delim {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    opacity: 0.78;
+    user-select: none;
+  }
+
+  #inline-math-input {
+    flex: 1;
+    min-inline-size: 140px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+  }
+
+  .math-engine-badge,
+  .mermaid-status-badge {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+    user-select: none;
+  }
+
+  .math-engine-badge[data-engine="mathjax"] {
+    background: rgba(139, 92, 246, 0.16);
+    color: #8b5cf6;
+  }
+
+  .math-engine-badge[data-engine="error"],
+  .mermaid-status-badge {
+    background: rgba(217, 119, 6, 0.16);
+    color: #d97706;
+  }
+
+  /* Display Math & Mermaid Shared Typora Live-Edit Drawer */
+  .lepora-display-math,
+  .lepora-mermaid-block {
+    position: relative;
+    margin-block: 1.35em;
+    border-radius: 14px;
+    transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    border: 1px solid transparent;
+  }
+
+  .lepora-display-math:hover,
+  .lepora-mermaid-block:hover {
+    background: var(--surface-subtle);
+    border-color: var(--border-subtle);
+  }
+
+  .lepora-display-math.is-editing,
+  .lepora-mermaid-block.is-editing {
+    background: var(--surface-subtle);
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--border-subtle));
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+  }
+
+  .block-editor-drawer {
+    border-block-end: 1px solid var(--border-subtle);
+    background: color-mix(in srgb, var(--surface-elevated) 75%, transparent);
+  }
+
+  .block-editor-drawer[hidden] {
+    display: none;
+  }
+
+  .block-editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 12px;
+    border-block-end: 1px solid var(--border-subtle);
+  }
+
+  .block-editor-title-group,
+  .block-editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .block-editor-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .block-editor-select {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-subtle);
+    color: var(--text-primary);
+    outline: none;
+  }
+
+  .block-editor-btn {
+    border: 1px solid var(--border-subtle);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 550;
+    padding: 3px 9px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+  }
+
+  .block-editor-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+  }
+
+  .block-editor-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  .block-editor-textarea {
+    box-sizing: border-box;
+    display: block;
+    inline-size: 100%;
+    min-block-size: 56px;
+    padding: 11px 14px;
+    border: none;
+    resize: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    line-height: 1.6;
+    outline: none;
+  }
+
+  .display-math-preview {
+    padding: 16px 18px;
+    text-align: center;
+    overflow-x: auto;
+    cursor: pointer;
+    min-block-size: 32px;
+  }
+
+  .display-math-preview .katex-display {
+    margin: 0.2em 0;
+  }
+
+  .display-math-preview mjx-container {
+    display: block !important;
+    margin: 0.25em auto !important;
+    overflow-x: auto;
+  }
+
+  .math-placeholder,
+  .math-loading,
+  .mermaid-empty {
+    font-size: 0.9em;
+    color: var(--text-faint);
+    font-style: italic;
+  }
+
+  .math-error,
+  .mermaid-error {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.09);
+    padding: 4px 10px;
+    border-radius: 8px;
+    display: inline-block;
+  }
+
+  /* Mermaid Preview */
+  .mermaid-preview {
+    padding: 18px 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: auto;
+    cursor: pointer;
+    min-block-size: 64px;
+  }
+
+  .mermaid-preview svg {
+    max-inline-size: 100%;
+    block-size: auto;
+  }
+
+  .mermaid-hover-edit {
+    position: absolute;
+    inset-block-start: 10px;
+    inset-inline-end: 10px;
+    opacity: 0;
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-elevated);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 550;
+    padding: 4px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: opacity 150ms ease, color 120ms ease;
+  }
+
+  .lepora-mermaid-block:hover .mermaid-hover-edit {
+    opacity: 1;
+  }
+
+  .mermaid-hover-edit:hover {
+    color: var(--text-primary);
+  }
+
+  /* Images */
+  .lepora-image-wrapper {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    max-inline-size: 100%;
+    margin-block: 0.55em;
+    border-radius: 10px;
+    vertical-align: middle;
+  }
+
+  .lepora-image {
+    display: block;
+    max-inline-size: 100%;
+    block-size: auto;
+    border-radius: 10px;
+    transition: box-shadow 160ms ease;
+  }
+
+  .lepora-image-wrapper.ProseMirror-selectednode .lepora-image,
+  .lepora-image-wrapper.is-resizing .lepora-image {
+    box-shadow: 0 0 0 2.5px var(--accent);
+  }
+
+  .image-hover-bar {
+    position: absolute;
+    inset-block-start: 8px;
+    inset-inline-end: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 6px;
+    border-radius: 999px;
+    background: var(--surface-elevated);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+
+  .lepora-image-wrapper:is(:hover, .is-resizing) .image-hover-bar {
+    opacity: 1;
+  }
+
+  .image-size-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    padding-inline: 4px;
+  }
+
+  .image-hover-bar button {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .image-hover-bar button:hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+  }
+
+  .image-resize-handle {
+    position: absolute;
+    inset-block-end: 8px;
+    inset-inline-end: 8px;
+    inline-size: 14px;
+    block-size: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    cursor: nwse-resize;
+    opacity: 0;
+    transition: opacity 150ms ease, transform 150ms ease;
+  }
+
+  .lepora-image-wrapper:is(:hover, .is-resizing) .image-resize-handle {
+    opacity: 1;
+  }
+
+  .image-resize-handle:hover {
+    transform: scale(1.15);
+  }
+
+  .image-caption {
+    margin-block-start: 6px;
+    font-size: 0.84em;
+    color: var(--text-muted);
+  }
+
+  /* Search Highlight Decorations */
+  .lepora-search-match {
+    background: rgba(250, 204, 21, 0.35);
+    border-radius: 3px;
+  }
+
+  .lepora-search-match.is-current {
+    background: rgba(249, 115, 22, 0.55);
+    box-shadow: 0 0 0 1.5px rgba(249, 115, 22, 0.8);
+  }
+
+  @keyframes popIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    overflow: visible !important;
+    block-size: auto !important;
+  }
+
+  .editor-host {
+    position: static !important;
+    overflow: visible !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+  }
+
+  .lepora-prose {
+    padding: 0 !important;
+    max-inline-size: none !important;
+  }
+
+  .block-editor-drawer,
+  .mermaid-hover-edit,
+  .image-hover-bar,
+  .image-resize-handle,
+  .code-block-toolbar,
+  .table-toolbar,
+  .inline-math-popover {
+    display: none !important;
+  }
+}

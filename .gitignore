@@ -1,0 +1,11 @@
+# Build outputs
+build/
+Lepora.xcodeproj/
+EditorEngine/node_modules/
+Lepora/Resources/EditorBundle/
+
+# macOS & Xcode
+.DS_Store
+*.xcuserdata
+*.xcscmblueprint
+DerivedData/

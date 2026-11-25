@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Lepora Editor</title>
+</head>
+<body data-theme="system">
+  <main id="lepora-shell" class="lepora-shell">
+    <div id="wysiwyg-host" class="editor-host is-active" aria-label="Markdown WYSIWYG Editor"></div>
+    <div id="source-host" class="editor-host source-host" aria-label="Markdown Source Editor" hidden></div>
+  </main>
+
+  <!-- Floating inline math editor popover (Typora style) -->
+  <div id="inline-math-popover" class="inline-math-popover" hidden role="dialog" aria-label="Edit inline LaTeX">
+    <div class="inline-math-preview" id="inline-math-preview"></div>
+    <div class="inline-math-input-row">
+      <span class="math-delim" id="inline-math-open">$</span>
+      <input
+        id="inline-math-input"
+        type="text"
+        spellcheck="false"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        placeholder="E = mc^2"
+      />
+      <span class="math-delim" id="inline-math-close">$</span>
+      <span class="math-engine-badge" id="inline-math-badge">KaTeX</span>
+    </div>
+  </div>
+
+  <!-- Floating contextual table controls -->
+  <div id="table-toolbar" class="table-toolbar" hidden role="toolbar" aria-label="Table actions">
+    <button type="button" data-action="addRowBefore" title="在上方插入行">+↑行</button>
+    <button type="button" data-action="addRowAfter" title="在下方插入行">+↓行</button>
+    <button type="button" data-action="deleteRow" title="删除当前行">−行</button>
+    <span class="toolbar-sep" aria-hidden="true"></span>
+    <button type="button" data-action="addColBefore" title="在左侧插入列">+←列</button>
+    <button type="button" data-action="addColAfter" title="在右侧插入列">+→列</button>
+    <button type="button" data-action="deleteCol" title="删除当前列">−列</button>
+    <span class="toolbar-sep" aria-hidden="true"></span>
+    <button type="button" data-action="alignLeft" title="左对齐">⫷</button>
+    <button type="button" data-action="alignCenter" title="居中对齐">⫶</button>
+    <button type="button" data-action="alignRight" title="右对齐">⫸</button>
+    <span class="toolbar-sep" aria-hidden="true"></span>
+    <button type="button" data-action="deleteTable" class="danger" title="删除表格">删除</button>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
