@@ -53,6 +53,19 @@ private enum MarkdownContentTypes {
     }()
 }
 
+private struct PersistedTabSnapshot: Codable {
+    var filePath: String?
+    var draftMarkdown: String?
+    var editorModeRaw: String
+    var untitledNumber: Int
+}
+
+private struct PersistedSessionSnapshot: Codable {
+    var tabs: [PersistedTabSnapshot]
+    var activeTabIndex: Int
+    var workspacePath: String?
+}
+
 @Observable
 @MainActor
 final class DocumentSession {
@@ -64,7 +77,7 @@ final class DocumentSession {
     var fileURL: URL?
     var workspaceURL: URL?
     var fileTree: [FileTreeNode] = []
-    var markdown: String = DocumentSession.welcomeMarkdown
+    var markdown: String = ""
     var isDirty: Bool = false
     var editorMode: EditorMode = .wysiwyg
     var outline: [OutlineItem] = []
@@ -95,6 +108,7 @@ final class DocumentSession {
     private let watcher = FileWatcher()
     private var reusableOpenPanel: NSOpenPanel?
     private var autoSaveTask: Task<Void, Never>?
+    private var draftPersistTask: Task<Void, Never>?
     private var fileTreeScanTask: Task<Void, Never>?
     private var typingIdleTask: Task<Void, Never>?
     private var toastTask: Task<Void, Never>?
@@ -102,24 +116,12 @@ final class DocumentSession {
     private var nextUntitledCounter: Int = 1
 
     private let recentFilesKey = "lepora.recentFiles"
+    private let lastSessionKey = "lepora.lastSession"
 
     init() {
-        let initialTab = DocumentTab(
-            id: UUID(),
-            fileURL: nil,
-            markdown: Self.welcomeMarkdown,
-            isDirty: false,
-            editorMode: .wysiwyg,
-            outline: [],
-            activeHeadingId: "",
-            stats: DocumentStats(),
-            untitledNumber: 0,
-            isWelcomePlaceholder: true
-        )
-        self.tabs = [initialTab]
-        self.activeTabID = initialTab.id
-        self.markdown = initialTab.markdown
+        self.activeTabID = UUID()
         loadRecentFiles()
+        restoreLastSessionOrBlank()
     }
 
     var activeTabIndex: Int? {
@@ -180,6 +182,13 @@ final class DocumentSession {
                 try? await Task.sleep(for: .seconds(1.2))
                 guard !Task.isCancelled else { return }
                 self.saveDocument(silent: true)
+            }
+        } else if fileURL == nil {
+            draftPersistTask?.cancel()
+            draftPersistTask = Task {
+                try? await Task.sleep(for: .milliseconds(800))
+                guard !Task.isCancelled else { return }
+                self.persistSessionState()
             }
         }
     }
@@ -278,6 +287,8 @@ final class DocumentSession {
         } else if wasActive {
             let nextIndex = min(idx, tabs.count - 1)
             activateTab(tabs[nextIndex].id)
+        } else {
+            persistSessionState()
         }
     }
 
@@ -301,6 +312,7 @@ final class DocumentSession {
         if let url = tab.fileURL {
             startWatching(url)
         }
+        persistSessionState()
     }
 
     private func makeNewUntitledTab() -> DocumentTab {
@@ -442,7 +454,8 @@ final class DocumentSession {
         withAnimation(.snappy(duration: 0.25)) {
             isSidebarVisible = true
         }
-        refreshFileTree(autoOpenFirstIfWelcome: true)
+        persistSessionState()
+        refreshFileTree(autoOpenFirstIfEmpty: true)
     }
 
     func closeWorkspace() {
@@ -451,6 +464,7 @@ final class DocumentSession {
             workspaceURL = nil
             fileTree = []
         }
+        persistSessionState()
     }
 
     func openFile(_ url: URL) {
@@ -522,7 +536,7 @@ final class DocumentSession {
         return String(decoding: rawData, as: UTF8.self)
     }
 
-    func refreshFileTree(autoOpenFirstIfWelcome: Bool = false) {
+    func refreshFileTree(autoOpenFirstIfEmpty: Bool = false) {
         fileTreeScanTask?.cancel()
         guard let root = workspaceURL else {
             fileTree = []
@@ -535,11 +549,12 @@ final class DocumentSession {
             guard !Task.isCancelled else { return }
             self.fileTree = scanned
 
-            if autoOpenFirstIfWelcome,
+            if autoOpenFirstIfEmpty,
                self.tabs.count == 1,
                let only = self.tabs.first,
-               only.isWelcomePlaceholder,
-               !only.isDirty {
+               only.fileURL == nil,
+               !only.isDirty,
+               (only.isWelcomePlaceholder || only.markdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
                 let flat = FileTreeNode.flattenMarkdownFiles(from: scanned)
                 if let readme = flat.first(where: { $0.name.lowercased() == "readme.md" }) ?? flat.first {
                     self.openFile(readme.url)
@@ -635,6 +650,7 @@ final class DocumentSession {
                 startWatching(dest)
             }
             addRecentFile(dest)
+            persistSessionState()
             if workspaceURL != nil {
                 refreshFileTree()
             }
@@ -673,6 +689,7 @@ final class DocumentSession {
         editorMode = mode
         syncActiveTabSnapshot()
         bridgeController?.setMode(mode)
+        persistSessionState()
     }
 
     func applySettings(_ settings: AppSettings) {
@@ -880,6 +897,166 @@ final class DocumentSession {
                     }
                 }
             }
+        }
+    }
+
+    // MARK: - Session Persistence & Restoration
+
+    func persistSessionState() {
+        syncActiveTabSnapshot()
+        var snapshots: [PersistedTabSnapshot] = []
+        var persistedActiveIdx = 0
+
+        for tab in tabs {
+            if let url = tab.fileURL {
+                if tab.id == activeTabID {
+                    persistedActiveIdx = snapshots.count
+                }
+                snapshots.append(
+                    PersistedTabSnapshot(
+                        filePath: url.standardizedFileURL.path,
+                        draftMarkdown: nil,
+                        editorModeRaw: tab.editorMode.rawValue,
+                        untitledNumber: 0
+                    )
+                )
+            } else if !tab.isWelcomePlaceholder {
+                let trimmed = tab.markdown.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty {
+                    if tab.id == activeTabID {
+                        persistedActiveIdx = snapshots.count
+                    }
+                    // Cap inline draft snapshot at 512 KB to keep UserDefaults fast
+                    let safeDraft = tab.markdown.utf8.count <= 524_288 ? tab.markdown : nil
+                    snapshots.append(
+                        PersistedTabSnapshot(
+                            filePath: nil,
+                            draftMarkdown: safeDraft,
+                            editorModeRaw: tab.editorMode.rawValue,
+                            untitledNumber: max(1, tab.untitledNumber)
+                        )
+                    )
+                }
+            }
+        }
+
+        let payload = PersistedSessionSnapshot(
+            tabs: snapshots,
+            activeTabIndex: persistedActiveIdx,
+            workspacePath: workspaceURL?.standardizedFileURL.path
+        )
+        if let encoded = try? JSONEncoder().encode(payload) {
+            UserDefaults.standard.set(encoded, forKey: lastSessionKey)
+        }
+    }
+
+    private func restoreLastSessionOrBlank() {
+        let fm = FileManager.default
+        var restoredTabs: [DocumentTab] = []
+        var desiredActiveIdx = 0
+        var seenPaths = Set<String>()
+
+        if let data = UserDefaults.standard.data(forKey: lastSessionKey),
+           let snapshot = try? JSONDecoder().decode(PersistedSessionSnapshot.self, from: data) {
+            // 1. Restore workspace folder if it still exists
+            if let wsPath = snapshot.workspacePath {
+                var isDir: ObjCBool = false
+                if fm.fileExists(atPath: wsPath, isDirectory: &isDir), isDir.boolValue {
+                    workspaceURL = URL(fileURLWithPath: wsPath, isDirectory: true)
+                    refreshFileTree()
+                }
+            }
+
+            // 2. Restore each valid open document or non-empty untitled draft
+            for (rawIdx, item) in snapshot.tabs.enumerated() {
+                let mode = EditorMode(rawValue: item.editorModeRaw) ?? .wysiwyg
+                if let path = item.filePath {
+                    let url = URL(fileURLWithPath: path).standardizedFileURL
+                    guard !seenPaths.contains(url.path),
+                          fm.fileExists(atPath: url.path),
+                          let content = try? Self.readMarkdownStringOffMain(from: url) else {
+                        continue
+                    }
+                    seenPaths.insert(url.path)
+                    if rawIdx == snapshot.activeTabIndex {
+                        desiredActiveIdx = restoredTabs.count
+                    }
+                    restoredTabs.append(
+                        DocumentTab(
+                            id: UUID(),
+                            fileURL: url,
+                            markdown: content,
+                            isDirty: false,
+                            editorMode: mode,
+                            outline: [],
+                            activeHeadingId: "",
+                            stats: DocumentStats(),
+                            untitledNumber: 0,
+                            isWelcomePlaceholder: false
+                        )
+                    )
+                } else if let draft = item.draftMarkdown,
+                          !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    let num = max(1, item.untitledNumber)
+                    nextUntitledCounter = max(nextUntitledCounter, num + 1)
+                    if rawIdx == snapshot.activeTabIndex {
+                        desiredActiveIdx = restoredTabs.count
+                    }
+                    restoredTabs.append(
+                        DocumentTab(
+                            id: UUID(),
+                            fileURL: nil,
+                            markdown: draft,
+                            isDirty: true,
+                            editorMode: mode,
+                            outline: [],
+                            activeHeadingId: "",
+                            stats: DocumentStats(),
+                            untitledNumber: num,
+                            isWelcomePlaceholder: false
+                        )
+                    )
+                }
+            }
+        } else if let latestURL = recentFiles.first(where: { fm.fileExists(atPath: $0.path) }),
+                  let content = try? Self.readMarkdownStringOffMain(from: latestURL) {
+            // First launch after upgrade (no lastSession stored yet): resume the most recently opened document
+            restoredTabs.append(
+                DocumentTab(
+                    id: UUID(),
+                    fileURL: latestURL.standardizedFileURL,
+                    markdown: content,
+                    isDirty: false,
+                    editorMode: .wysiwyg,
+                    outline: [],
+                    activeHeadingId: "",
+                    stats: DocumentStats(),
+                    untitledNumber: 0,
+                    isWelcomePlaceholder: false
+                )
+            )
+            desiredActiveIdx = 0
+        }
+
+        if restoredTabs.isEmpty {
+            restoredTabs = [makeNewUntitledTab()]
+            desiredActiveIdx = 0
+        }
+
+        let safeIdx = min(max(0, desiredActiveIdx), restoredTabs.count - 1)
+        let active = restoredTabs[safeIdx]
+        tabs = restoredTabs
+        activeTabID = active.id
+        fileURL = active.fileURL
+        markdown = active.markdown
+        isDirty = active.isDirty
+        editorMode = active.editorMode
+        outline = active.outline
+        activeHeadingId = active.activeHeadingId
+        stats = active.stats
+
+        if let url = active.fileURL {
+            startWatching(url)
         }
     }
 

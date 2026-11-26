@@ -6,6 +6,7 @@ final class LeporaAppDelegate: NSObject, NSApplicationDelegate {
     var pendingURLs: [URL] = []
     var onOpenURLs: (([URL]) -> Void)?
     var hasUnsavedDocuments: (() -> [DocumentTab])?
+    var onWillTerminate: (() -> Void)?
 
     func application(_ application: NSApplication, open urls: [URL]) {
         if let handler = onOpenURLs {
@@ -17,6 +18,10 @@ final class LeporaAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        onWillTerminate?()
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -53,6 +58,9 @@ struct LeporaApp: App {
                     Self.syncDockIcon(for: settings.theme)
                     appDelegate.hasUnsavedDocuments = {
                         session.tabs.filter(\.isDirty)
+                    }
+                    appDelegate.onWillTerminate = {
+                        session.persistSessionState()
                     }
                     appDelegate.onOpenURLs = { urls in
                         for url in urls {

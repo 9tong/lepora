@@ -103,6 +103,9 @@ final class EditorBridgeController: NSObject, WKScriptMessageHandler, WKNavigati
             } else {
                 loadDocument(markdown: session.markdown, baseDirPath: session.baseDirectoryPath)
             }
+            if session.editorMode != .wysiwyg {
+                setMode(session.editorMode)
+            }
 
         case "contentChanged":
             if let md = dict["markdown"] as? String {
