@@ -70,8 +70,10 @@ cp "$ROOT_DIR/Lepora/Info.plist" "$CONTENTS/Info.plist"
 
 printf 'APPL????' > "$CONTENTS/PkgInfo"
 
-# 6. Strip Finder xattrs and ad-hoc sign cleanly
+# 6. Strip Finder xattrs / AppleDouble files and ad-hoc sign cleanly
+find "$APP_BUNDLE" -name '._*' -delete 2>/dev/null || true
 xattr -cr "$APP_BUNDLE"
+dot_clean -m "$APP_BUNDLE" 2>/dev/null || true
 codesign --force --deep --sign - "$APP_BUNDLE"
 codesign --verify --deep --strict "$APP_BUNDLE"
 

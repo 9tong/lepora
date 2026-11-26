@@ -79,12 +79,12 @@ func renderIcon(px: Int) -> Data {
     let radius = rect.width * 0.225
     let squircle = continuousSquirclePath(in: rect, radius: radius)
 
-    // Subtle macOS icon drop shadow
+    // Airy macOS icon drop shadow
     cg.saveGState()
     cg.setShadow(
-        offset: CGSize(width: 0, height: -s * 0.016),
-        blur: s * 0.036,
-        color: NSColor.black.withAlphaComponent(0.28).cgColor
+        offset: CGSize(width: 0, height: -s * 0.015),
+        blur: s * 0.034,
+        color: NSColor.black.withAlphaComponent(0.20).cgColor
     )
     cg.addPath(squircle)
     cg.setFillColor(NSColor.black.cgColor)
@@ -109,10 +109,10 @@ func renderIcon(px: Int) -> Data {
     let rimGrad = CGGradient(
         colorsSpace: cs,
         colors: [
-            NSColor.white.withAlphaComponent(0.42).cgColor,
-            NSColor.white.withAlphaComponent(0.10).cgColor,
-            NSColor.white.withAlphaComponent(0.04).cgColor,
-            NSColor.white.withAlphaComponent(0.18).cgColor,
+            NSColor.white.withAlphaComponent(0.58).cgColor,
+            NSColor.white.withAlphaComponent(0.14).cgColor,
+            NSColor.white.withAlphaComponent(0.03).cgColor,
+            NSColor.white.withAlphaComponent(0.24).cgColor,
         ] as CFArray,
         locations: [0.0, 0.35, 0.72, 1.0]
     )!
