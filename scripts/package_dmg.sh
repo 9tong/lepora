@@ -8,8 +8,15 @@ ARCH="arm64"
 APP_BUNDLE="$ROOT_DIR/build/Release/$APP_NAME.app"
 DMG_NAME="${APP_NAME}-${VERSION}-${ARCH}.dmg"
 DMG_OUTPUT="$ROOT_DIR/build/$DMG_NAME"
-STAGING_DIR="$ROOT_DIR/build/dmg_staging"
-TMP_DMG="$ROOT_DIR/build/${APP_NAME}-tmp.dmg"
+STAGING_DIR="$(mktemp -d /tmp/lepora-dmg-staging.XXXXXX)"
+TMP_DMG="/tmp/${APP_NAME}-tmp-$$.dmg"
+VERIFY_MNT="/tmp/${APP_NAME}-verify-$$"
+
+cleanup() {
+  hdiutil detach "$VERIFY_MNT" -force >/dev/null 2>&1 || true
+  rm -rf "$STAGING_DIR" "$TMP_DMG" "$VERIFY_MNT"
+}
+trap cleanup EXIT
 
 echo "==> Packaging $DMG_NAME..."
 
@@ -18,9 +25,8 @@ if [ ! -d "$APP_BUNDLE" ]; then
   "$ROOT_DIR/scripts/build_app.sh" Release
 fi
 
-# 2. Prepare clean staging folder with Lepora.app + /Applications symlink
-rm -rf "$STAGING_DIR" "$TMP_DMG" "$DMG_OUTPUT"
-mkdir -p "$STAGING_DIR"
+# 2. Prepare clean staging folder outside iCloud/FileProvider to prevent FinderInfo detritus
+rm -f "$DMG_OUTPUT"
 ditto --norsrc "$APP_BUNDLE" "$STAGING_DIR/$APP_NAME.app"
 ln -s /Applications "$STAGING_DIR/Applications"
 
@@ -29,10 +35,11 @@ xattr -cr "$STAGING_DIR/$APP_NAME.app"
 codesign --force --deep --sign - "$STAGING_DIR/$APP_NAME.app"
 codesign --verify --deep --strict "$STAGING_DIR/$APP_NAME.app"
 
-# 3. Create temporary read-write DMG
+# 3. Create temporary read-write APFS DMG (zero legacy HFS+ FinderInfo detritus)
 hdiutil create \
   -volname "$APP_NAME" \
   -srcfolder "$STAGING_DIR" \
+  -fs APFS \
   -ov \
   -format UDRW \
   "$TMP_DMG" >/dev/null
@@ -52,6 +59,7 @@ if [ -n "${VOL_PATH:-}" ] && [ -d "$VOL_PATH" ]; then
     cp "$APP_BUNDLE/Contents/Resources/AppIcon.icns" "$VOL_PATH/.VolumeIcon.icns"
     SetFile -a C "$VOL_PATH" 2>/dev/null || true
   fi
+  xattr -cr "$VOL_PATH/$APP_NAME.app"
   sync
   sleep 1
   hdiutil detach "$DEVICE" >/dev/null 2>&1 || hdiutil detach "$VOL_PATH" -force >/dev/null 2>&1
@@ -64,9 +72,13 @@ hdiutil convert "$TMP_DMG" \
   -ov \
   -o "$DMG_OUTPUT" >/dev/null
 
-# 6. Cleanup & verify final DMG
-rm -rf "$STAGING_DIR" "$TMP_DMG"
+# 6. Verify final DMG checksum & strict inner app code signature
 hdiutil verify "$DMG_OUTPUT" >/dev/null
+mkdir -p "$VERIFY_MNT"
+hdiutil attach -nobrowse -readonly -mountpoint "$VERIFY_MNT" "$DMG_OUTPUT" >/dev/null
+codesign --verify --deep --strict "$VERIFY_MNT/$APP_NAME.app"
+hdiutil detach "$VERIFY_MNT" >/dev/null
+
 SHA256="$(shasum -a 256 "$DMG_OUTPUT" | awk '{print $1}')"
 SIZE="$(du -h "$DMG_OUTPUT" | awk '{print $1}')"
 
