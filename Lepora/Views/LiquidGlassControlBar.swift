@@ -1,121 +1,65 @@
 import SwiftUI
 
-/// Apple macOS 26/27 Liquid Glass style floating slider bar for live adjustment
-/// of the Liquid Glass canvas clarity ↔ frosted intensity.
-/// Appears exclusively when the "液态玻璃" theme is active.
-struct LiquidGlassControlBar: View {
+/// Apple macOS 26/27 Liquid Glass style fluid intensity bar used inside Settings
+/// for live adjustment of the Liquid Glass canvas clarity ↔ frosted intensity.
+struct LiquidGlassIntensitySliderBar: View {
     @Binding var intensity: Double
-    let isTypingMinimalMode: Bool
 
     @Environment(\.colorScheme) private var colorScheme
-    @State private var isHovered: Bool = false
     @State private var isDragging: Bool = false
 
-    private var effectiveOpacity: Double {
-        if isDragging || isHovered || !isTypingMinimalMode {
-            return 1.0
-        }
-        return 0.20
-    }
-
-    private var intensityLabel: String {
-        switch intensity {
-        case ..<0.20: "极清通透"
-        case ..<0.42: "轻透液态"
-        case ..<0.66: "均衡玻璃"
-        case ..<0.86: "柔雾磨砂"
-        default: "深雾沉浸"
-        }
-    }
-
     var body: some View {
-        VStack(spacing: 6) {
-            // Subtle floating readout pill while hovering or dragging
-            if isDragging || isHovered {
-                HStack(spacing: 5) {
-                    Text(intensityLabel)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.primary.opacity(0.85))
-                    Text("\(Int((intensity * 100).rounded()))%")
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
+        HStack(spacing: 10) {
+            Button {
+                withAnimation(.snappy(duration: 0.2)) {
+                    intensity = max(0.0, intensity - 0.15)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .glassEffect(.regular, in: .capsule)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } label: {
+                Image(systemName: "drop")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(intensity < 0.35 ? Color.primary.opacity(0.92) : Color.secondary.opacity(0.8))
+                    .frame(width: 18, height: 18)
+                    .contentShape(Circle())
             }
+            .buttonStyle(.plain)
+            .help("更通透")
 
-            // Main Apple-style Liquid Glass capsule slider bar
-            HStack(spacing: 10) {
-                Button {
-                    withAnimation(.snappy(duration: 0.22)) {
-                        intensity = max(0.0, (intensity - 0.15))
-                    }
-                } label: {
-                    Image(systemName: "drop")
-                        .font(.system(size: 11.5, weight: .medium))
-                        .foregroundStyle(
-                            intensity < 0.35 ? Color.primary.opacity(0.92) : Color.secondary.opacity(0.8)
-                        )
-                        .frame(width: 20, height: 20)
-                        .contentShape(Circle())
+            LiquidGlassFluidTrack(value: $intensity, isDragging: $isDragging)
+                .frame(maxWidth: .infinity)
+                .frame(height: 22)
+
+            Button {
+                withAnimation(.snappy(duration: 0.2)) {
+                    intensity = min(1.0, intensity + 0.15)
                 }
-                .buttonStyle(.plain)
-                .help("更通透")
-
-                LiquidGlassFluidTrack(value: $intensity, isDragging: $isDragging)
-                    .frame(width: 146, height: 22)
-
-                Button {
-                    withAnimation(.snappy(duration: 0.22)) {
-                        intensity = min(1.0, (intensity + 0.15))
-                    }
-                } label: {
-                    Image(systemName: "aqi.medium")
-                        .font(.system(size: 11.5, weight: .medium))
-                        .foregroundStyle(
-                            intensity > 0.65 ? Color.primary.opacity(0.92) : Color.secondary.opacity(0.8)
-                        )
-                        .frame(width: 20, height: 20)
-                        .contentShape(Circle())
-                }
-                .buttonStyle(.plain)
-                .help("更柔雾")
+            } label: {
+                Image(systemName: "aqi.medium")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(intensity > 0.65 ? Color.primary.opacity(0.92) : Color.secondary.opacity(0.8))
+                    .frame(width: 18, height: 18)
+                    .contentShape(Circle())
             }
-            .padding(.horizontal, 12)
-            .frame(height: 32)
-            .glassEffect(.regular, in: .capsule)
-            .overlay {
-                Capsule()
-                    .strokeBorder(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(colorScheme == .dark ? 0.24 : 0.68),
-                                Color.white.opacity(colorScheme == .dark ? 0.05 : 0.14),
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 0.6
-                    )
-                    .allowsHitTesting(false)
-            }
-            .shadow(
-                color: Color.black.opacity(colorScheme == .dark ? 0.28 : 0.09),
-                radius: 14,
-                x: 0,
-                y: 5
-            )
-            .scaleEffect(isDragging ? 1.025 : 1.0)
-            .animation(.spring(response: 0.28, dampingFraction: 0.78), value: isDragging)
+            .buttonStyle(.plain)
+            .help("更柔雾")
         }
-        .opacity(effectiveOpacity)
-        .animation(.easeInOut(duration: 0.22), value: effectiveOpacity)
-        .animation(.snappy(duration: 0.18), value: isHovered)
-        .animation(.snappy(duration: 0.18), value: isDragging)
-        .onHover { isHovered = $0 }
+        .padding(.horizontal, 10)
+        .frame(height: 28)
+        .glassEffect(.regular, in: .capsule)
+        .overlay {
+            Capsule()
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(colorScheme == .dark ? 0.22 : 0.65),
+                            Color.white.opacity(colorScheme == .dark ? 0.05 : 0.14),
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 0.6
+                )
+                .allowsHitTesting(false)
+        }
     }
 }
 

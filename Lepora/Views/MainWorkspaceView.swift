@@ -333,24 +333,7 @@ struct MainWorkspaceView: View {
             .frame(maxWidth: .infinity, alignment: .trailing)
             .ignoresSafeArea(.container, edges: .top)
 
-            // 6. Floating Bottom-Center Apple Liquid Glass Intensity Bar (only in Liquid Glass theme)
-            if settings.theme == .translucent {
-                VStack {
-                    Spacer()
-                    LiquidGlassControlBar(
-                        intensity: $settings.glassIntensity,
-                        isTypingMinimalMode: session.isTypingMinimalMode
-                    )
-                    .padding(.bottom, 16)
-                }
-                .padding(.leading, session.isSidebarVisible ? 264 : 0)
-                .padding(.trailing, session.isOutlineVisible ? 226 : 0)
-                .animation(.spring(response: 0.34, dampingFraction: 0.86), value: session.isSidebarVisible)
-                .animation(.spring(response: 0.32, dampingFraction: 0.86), value: session.isOutlineVisible)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-
-            // 7. Floating Bottom-Trailing Animated Feather & Transient Toast
+            // 6. Floating Bottom-Trailing Animated Feather & Transient Toast
             VStack {
                 Spacer()
                 HStack {

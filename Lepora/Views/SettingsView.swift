@@ -59,15 +59,7 @@ struct SettingsView: View {
                             .font(.system(size: 13))
                             .frame(width: 64, alignment: .leading)
 
-                        Image(systemName: "drop")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-
-                        Slider(value: $settings.glassIntensity, in: 0...1)
-
-                        Image(systemName: "aqi.medium")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
+                        LiquidGlassIntensitySliderBar(intensity: $settings.glassIntensity)
 
                         Text("\(Int((settings.glassIntensity * 100).rounded()))%")
                             .font(.system(size: 12, weight: .medium, design: .rounded))
