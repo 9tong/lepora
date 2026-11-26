@@ -180,7 +180,10 @@ final class EditorBridgeController: NSObject, WKScriptMessageHandler, WKNavigati
     }
 
     private func eval(_ js: String) {
-        webView?.evaluateJavaScript(js) { [weak session] _, error in
+        // Always conclude with a JSON-serializable primitive (`true`) so WKWebView never fails
+        // with WKError.javaScriptResultTypeIsUnsupported on void/Promise/non-serializable results.
+        let wrapped = "(function(){ \(js) })(); true;"
+        webView?.evaluateJavaScript(wrapped) { [weak session] _, error in
             if let error {
                 Task { @MainActor in
                     session?.showToast("编辑器执行异常：\(error.localizedDescription)")
@@ -198,8 +201,21 @@ final class EditorBridgeController: NSObject, WKScriptMessageHandler, WKNavigati
     }
 
     func setMode(_ mode: EditorMode) {
-        guard isEditorReady else { return }
-        eval("window.LeporaBridge?.setMode(\(jsonLiteral(mode.rawValue)));")
+        guard isEditorReady, let webView else { return }
+        let modeValue = mode.rawValue
+        Task { @MainActor [weak session, weak webView] in
+            guard let webView else { return }
+            do {
+                _ = try await webView.callAsyncJavaScript(
+                    "if (window.LeporaBridge) { await window.LeporaBridge.setMode(mode); } return true;",
+                    arguments: ["mode": modeValue],
+                    in: nil,
+                    contentWorld: .page
+                )
+            } catch {
+                session?.showToast("切换模式失败：\(error.localizedDescription)")
+            }
+        }
     }
 
     func applyPreferences(_ payload: [String: Any]) {
@@ -238,28 +254,28 @@ final class EditorBridgeController: NSObject, WKScriptMessageHandler, WKNavigati
 
     func find(query: String, caseSensitive: Bool, direction: String) async -> (count: Int, current: Int)? {
         guard isEditorReady, let webView else { return nil }
-        let js = "window.LeporaBridge?.find(\(jsonLiteral(query)), \(caseSensitive ? "true" : "false"), \(jsonLiteral(direction)))"
+        let js = "window.LeporaBridge?.find(\(jsonLiteral(query)), \(caseSensitive ? "true" : "false"), \(jsonLiteral(direction))) ?? null"
         guard let dict = try? await webView.evaluateJavaScript(js) as? [String: Any] else { return nil }
         return (dict["count"] as? Int ?? 0, dict["current"] as? Int ?? 0)
     }
 
     func replaceCurrent(query: String, replacement: String) async -> (count: Int, current: Int)? {
         guard isEditorReady, let webView else { return nil }
-        let js = "window.LeporaBridge?.replaceCurrent(\(jsonLiteral(query)), \(jsonLiteral(replacement)))"
+        let js = "window.LeporaBridge?.replaceCurrent(\(jsonLiteral(query)), \(jsonLiteral(replacement))) ?? null"
         guard let dict = try? await webView.evaluateJavaScript(js) as? [String: Any] else { return nil }
         return (dict["count"] as? Int ?? 0, dict["current"] as? Int ?? 0)
     }
 
     func replaceAll(query: String, replacement: String) async -> (count: Int, current: Int)? {
         guard isEditorReady, let webView else { return nil }
-        let js = "window.LeporaBridge?.replaceAll(\(jsonLiteral(query)), \(jsonLiteral(replacement)))"
+        let js = "window.LeporaBridge?.replaceAll(\(jsonLiteral(query)), \(jsonLiteral(replacement))) ?? null"
         guard let dict = try? await webView.evaluateJavaScript(js) as? [String: Any] else { return nil }
         return (dict["count"] as? Int ?? 0, dict["current"] as? Int ?? 0)
     }
 
     func fetchExportData() async -> (html: String, css: String)? {
         guard isEditorReady, let webView else { return nil }
-        guard let dict = try? await webView.evaluateJavaScript("window.LeporaBridge?.getExportData()") as? [String: Any],
+        guard let dict = try? await webView.evaluateJavaScript("window.LeporaBridge?.getExportData() ?? null") as? [String: Any],
               let html = dict["html"] as? String,
               let css = dict["css"] as? String else {
             return nil
