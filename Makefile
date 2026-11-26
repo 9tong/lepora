@@ -13,7 +13,7 @@ debug: editor
 	chmod +x scripts/build_app.sh && ./scripts/build_app.sh Debug
 
 dmg: build
-	chmod +x scripts/package_dmg.sh && ./scripts/package_dmg.sh 1.0.0
+	chmod +x scripts/package_dmg.sh && ./scripts/package_dmg.sh 1.0.1
 
 run: debug
 	open build/Debug/Lepora.app

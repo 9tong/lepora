@@ -187,6 +187,13 @@ struct MainWorkspaceView: View {
     @State private var isSidebarToggleHovered: Bool = false
     @State private var isFullScreen: Bool = false
 
+    private var topBarLeadingClearance: CGFloat {
+        if session.isSidebarVisible {
+            return 254 // Sidebar right edge: 10pt leading inset + 244pt width
+        }
+        return isFullScreen ? 44 : 116 // Collapsed sidebar toggle button right edge (14+30 or 86+30)
+    }
+
     var body: some View {
         ZStack {
             // 0. Fullscreen window state observer
@@ -206,56 +213,12 @@ struct MainWorkspaceView: View {
                 .animation(.spring(response: 0.32, dampingFraction: 0.86), value: session.isOutlineVisible)
                 .ignoresSafeArea()
 
-            // 3. Top frameless drag region + floating Liquid Glass title / tab strip
+            // 3. Top frameless window drag region
             VStack(spacing: 0) {
-                ZStack {
-                    WindowDragHandle()
-                        .frame(height: 52)
-
-                    if session.tabs.count <= 1 {
-                        // Ultra-minimal single document title pill
-                        Button {
-                            withAnimation(.snappy(duration: 0.2)) {
-                                session.isQuickOpenVisible = true
-                            }
-                        } label: {
-                            HStack(spacing: 6) {
-                                if session.isDirty {
-                                    Circle()
-                                        .fill(Color.accentColor)
-                                        .frame(width: 6, height: 6)
-                                }
-                                Text(session.displayTitle)
-                                    .font(.system(size: 12.5, weight: .medium))
-                                    .foregroundStyle(.primary.opacity(0.85))
-                                    .lineLimit(1)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 5)
-                        }
-                        .buttonStyle(.plain)
-                        .glassEffect(.regular, in: .capsule)
-                        .opacity((isTitleHovered || !session.isTypingMinimalMode) ? 1.0 : 0.22)
-                        .animation(.easeInOut(duration: 0.25), value: session.isTypingMinimalMode)
-                        .onHover { isTitleHovered = $0 }
-                        .help("点击或按 ⌘P 快速跳转文档与大纲")
-                    } else {
-                        // Sleek Liquid Glass multi-document tab bar (true-centered over writing canvas)
-                        DocumentTabBarView(session: session)
-                            .padding(.leading, session.isSidebarVisible ? 16 : (isFullScreen ? 56 : 126))
-                            .padding(.trailing, session.isOutlineVisible ? 16 : 246)
-                            .opacity((isTitleHovered || !session.isTypingMinimalMode) ? 1.0 : 0.35)
-                            .animation(.easeInOut(duration: 0.25), value: session.isTypingMinimalMode)
-                            .onHover { isTitleHovered = $0 }
-                    }
-                }
-
+                WindowDragHandle()
+                    .frame(height: 52)
                 Spacer()
             }
-            .padding(.leading, session.isSidebarVisible ? 264 : 0)
-            .padding(.trailing, session.isOutlineVisible ? 226 : 0)
-            .animation(.spring(response: 0.34, dampingFraction: 0.86), value: session.isSidebarVisible)
-            .animation(.spring(response: 0.32, dampingFraction: 0.86), value: session.isOutlineVisible)
             .ignoresSafeArea(.container, edges: .top)
 
             // 4. Floating Liquid Glass Sidebar (left — Files & Open Documents, vertically centered)
@@ -310,12 +273,66 @@ struct MainWorkspaceView: View {
             }
             .ignoresSafeArea(.container, edges: .top)
 
-            // 5. Floating Liquid Glass Top-Trailing Minimalist Controls, Find Bar & Right Outline Panel
-            VStack(alignment: .trailing, spacing: 10) {
-                FloatingToolbar(session: session, settings: settings)
-                    .padding(.top, 11)
-                    .padding(.trailing, 14)
+            // 5. Unified Non-Overlapping Top Bar (Center Title / Tab Bar + Right FloatingToolbar)
+            VStack(spacing: 0) {
+                HStack(alignment: .center, spacing: 12) {
+                    Color.clear
+                        .frame(width: topBarLeadingClearance, height: 1)
+                        .allowsHitTesting(false)
 
+                    Group {
+                        if session.tabs.count <= 1 {
+                            Button {
+                                withAnimation(.snappy(duration: 0.2)) {
+                                    session.isQuickOpenVisible = true
+                                }
+                            } label: {
+                                HStack(spacing: 6) {
+                                    if session.isDirty {
+                                        Circle()
+                                            .fill(Color.accentColor)
+                                            .frame(width: 6, height: 6)
+                                    }
+                                    Text(session.displayTitle)
+                                        .font(.system(size: 12.5, weight: .medium))
+                                        .foregroundStyle(.primary.opacity(0.85))
+                                        .lineLimit(1)
+                                        .truncationMode(.middle)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 5)
+                            }
+                            .buttonStyle(.plain)
+                            .glassEffect(.regular, in: .capsule)
+                            .opacity((isTitleHovered || !session.isTypingMinimalMode) ? 1.0 : 0.22)
+                            .animation(.easeInOut(duration: 0.25), value: session.isTypingMinimalMode)
+                            .onHover { isTitleHovered = $0 }
+                            .help("点击或按 ⌘P 快速跳转文档与大纲")
+                        } else {
+                            DocumentTabBarView(session: session)
+                                .opacity((isTitleHovered || !session.isTypingMinimalMode) ? 1.0 : 0.35)
+                                .animation(.easeInOut(duration: 0.25), value: session.isTypingMinimalMode)
+                                .onHover { isTitleHovered = $0 }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+
+                    FloatingToolbar(session: session, settings: settings)
+                        .fixedSize()
+                        .layoutPriority(1)
+                }
+                .frame(height: 30)
+                .padding(.top, 11)
+                .padding(.trailing, 14)
+                .animation(.spring(response: 0.34, dampingFraction: 0.86), value: session.isSidebarVisible)
+                .animation(.easeInOut(duration: 0.22), value: isFullScreen)
+
+                Spacer()
+            }
+            .ignoresSafeArea(.container, edges: .top)
+
+            // 5b. Right-aligned Find Bar & Floating Outline Panel (positioned cleanly below the top bar)
+            VStack(alignment: .trailing, spacing: 10) {
                 if session.isFindBarVisible {
                     FindReplaceBar(session: session)
                         .padding(.trailing, 14)
@@ -330,6 +347,7 @@ struct MainWorkspaceView: View {
 
                 Spacer()
             }
+            .padding(.top, 51)
             .frame(maxWidth: .infinity, alignment: .trailing)
             .ignoresSafeArea(.container, edges: .top)
 

@@ -7,13 +7,24 @@ struct DocumentTabBarView: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 4) {
-                    ForEach(session.tabs) { tab in
-                        tabPill(for: tab)
+            ViewThatFits(in: .horizontal) {
+                // 1. Fits comfortably: hug the tabs tightly with zero wasted glass space
+                tabsRow
+
+                // 2. Window narrowed or many tabs open: scroll smoothly inside exact available width
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        tabsRow
+                    }
+                    .onChange(of: session.activeTabID) {
+                        withAnimation(.snappy(duration: 0.2)) {
+                            proxy.scrollTo(session.activeTabID, anchor: .center)
+                        }
+                    }
+                    .onAppear {
+                        proxy.scrollTo(session.activeTabID, anchor: .center)
                     }
                 }
-                .padding(.horizontal, 4)
             }
             .frame(maxWidth: 640)
 
@@ -32,6 +43,16 @@ struct DocumentTabBarView: View {
         .padding(.horizontal, 4)
         .frame(height: 30)
         .glassEffect(.regular, in: .capsule)
+    }
+
+    private var tabsRow: some View {
+        HStack(spacing: 4) {
+            ForEach(session.tabs) { tab in
+                tabPill(for: tab)
+                    .id(tab.id)
+            }
+        }
+        .padding(.horizontal, 4)
     }
 
     @ViewBuilder

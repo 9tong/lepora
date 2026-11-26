@@ -174,13 +174,8 @@ struct LiquidGlassSidebar: View {
             }
         }
         .frame(width: 244)
-        .glassEffect(
-            .regular,
-            in: ConcentricRectangle(
-                corners: .concentric(minimum: isFullScreen ? 14 : 10),
-                isUniform: true
-            )
-        )
+        // Exact concentric match: macOS 26/27 unified-toolbar window corner (26pt) minus 10pt inset = 16pt
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: isFullScreen ? 14 : 16, style: .continuous))
         .shadow(color: .black.opacity(0.08), radius: 18, x: 0, y: 6)
         .alert("新建 Markdown 笔记", isPresented: $isCreatingFile) {
             TextField("文件名（例如 notes.md）", text: $newFileName)
