@@ -44,6 +44,7 @@ targets:
         NSHumanReadableCopyright: "Copyright © 2026 Leo. All rights reserved."
         NSSupportsAutomaticGraphicsSwitching: true
         CFBundleIconFile: AppIcon
+        CFBundleIconName: AppIcon
         CFBundleDocumentTypes:
           - CFBundleTypeName: Markdown Document
             CFBundleTypeRole: Editor

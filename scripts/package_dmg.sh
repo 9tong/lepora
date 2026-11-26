@@ -21,7 +21,7 @@ fi
 # 2. Prepare clean staging folder with Lepora.app + /Applications symlink
 rm -rf "$STAGING_DIR" "$TMP_DMG" "$DMG_OUTPUT"
 mkdir -p "$STAGING_DIR"
-cp -R "$APP_BUNDLE" "$STAGING_DIR/$APP_NAME.app"
+ditto --norsrc "$APP_BUNDLE" "$STAGING_DIR/$APP_NAME.app"
 ln -s /Applications "$STAGING_DIR/Applications"
 
 # Strip any macOS provenance/Finder xattrs, re-sign cleanly, and verify strictly

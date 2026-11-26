@@ -298,7 +298,10 @@ struct MainWorkspaceView: View {
             }
         }
         .preferredColorScheme(settings.theme.preferredColorScheme)
-        .onChange(of: settings.theme) { session.applySettings(settings) }
+        .onChange(of: settings.theme) {
+            session.applySettings(settings)
+            LeporaApp.syncDockIcon(for: settings.theme)
+        }
         .onChange(of: settings.fontSize) { session.applySettings(settings) }
         .onChange(of: settings.lineHeight) { session.applySettings(settings) }
         .onChange(of: settings.maxWidth) { session.applySettings(settings) }

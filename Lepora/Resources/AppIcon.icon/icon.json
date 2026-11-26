@@ -1,0 +1,123 @@
+{
+  "fill-specializations" : [
+    {
+      "value" : {
+        "linear-gradient" : [
+          "extended-srgb:0.99200,0.99500,1.00000,1.00000",
+          "extended-srgb:0.91000,0.93200,0.96200,1.00000"
+        ],
+        "orientation" : {
+          "start" : {
+            "x" : 0.0,
+            "y" : 0.0
+          },
+          "stop" : {
+            "x" : 1.0,
+            "y" : 1.0
+          }
+        }
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "linear-gradient" : [
+          "extended-srgb:0.03800,0.04500,0.06500,1.00000",
+          "extended-srgb:0.11200,0.13200,0.17500,1.00000"
+        ],
+        "orientation" : {
+          "start" : {
+            "x" : 0.0,
+            "y" : 0.0
+          },
+          "stop" : {
+            "x" : 1.0,
+            "y" : 1.0
+          }
+        }
+      }
+    }
+  ],
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "hidden-specializations" : [
+            {
+              "value" : false
+            },
+            {
+              "appearance" : "dark",
+              "value" : true
+            }
+          ],
+          "image-name" : "shadow-light.png",
+          "name" : "FloatingShadowLight"
+        },
+        {
+          "glass" : false,
+          "hidden-specializations" : [
+            {
+              "value" : true
+            },
+            {
+              "appearance" : "dark",
+              "value" : false
+            }
+          ],
+          "image-name" : "shadow-dark.png",
+          "name" : "FloatingReflectionDark"
+        }
+      ],
+      "specular" : false
+    },
+    {
+      "layers" : [
+        {
+          "glass" : true,
+          "hidden-specializations" : [
+            {
+              "value" : false
+            },
+            {
+              "appearance" : "dark",
+              "value" : true
+            }
+          ],
+          "image-name" : "feather-light.png",
+          "name" : "BlackFeather"
+        },
+        {
+          "glass" : true,
+          "hidden-specializations" : [
+            {
+              "value" : true
+            },
+            {
+              "appearance" : "dark",
+              "value" : false
+            }
+          ],
+          "image-name" : "feather-dark.png",
+          "name" : "WhiteFeather"
+        }
+      ],
+      "lighting" : "combined",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.22
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.36
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}

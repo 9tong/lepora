@@ -49,6 +49,7 @@ struct LeporaApp: App {
                 .frame(minWidth: 780, minHeight: 540)
                 .onAppear {
                     configureWindowAppearance()
+                    Self.syncDockIcon(for: settings.theme)
                     appDelegate.hasUnsavedDocuments = {
                         session.tabs.filter(\.isDirty)
                     }
@@ -274,6 +275,24 @@ struct LeporaApp: App {
 
         Settings {
             SettingsView(settings: settings)
+        }
+    }
+
+    static func syncDockIcon(for theme: EditorTheme) {
+        switch theme {
+        case .system, .translucent:
+            // Let macOS 26/27 natively render our Liquid Glass Assets.car icon (auto Light / Dark / Clear)
+            NSApplication.shared.applicationIconImage = nil
+        case .light, .paper:
+            if let url = Bundle.main.url(forResource: "DockIconLight", withExtension: "png"),
+               let img = NSImage(contentsOf: url) {
+                NSApplication.shared.applicationIconImage = img
+            }
+        case .dark:
+            if let url = Bundle.main.url(forResource: "DockIconDark", withExtension: "png"),
+               let img = NSImage(contentsOf: url) {
+                NSApplication.shared.applicationIconImage = img
+            }
         }
     }
 
