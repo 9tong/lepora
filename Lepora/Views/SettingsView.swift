@@ -52,6 +52,32 @@ struct SettingsView: View {
                     }
                 }
                 .padding(.vertical, 6)
+
+                if settings.theme == .translucent {
+                    HStack(spacing: 12) {
+                        Text("玻璃幅度")
+                            .font(.system(size: 13))
+                            .frame(width: 64, alignment: .leading)
+
+                        Image(systemName: "drop")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+
+                        Slider(value: $settings.glassIntensity, in: 0...1)
+
+                        Image(systemName: "aqi.medium")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+
+                        Text("\(Int((settings.glassIntensity * 100).rounded()))%")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                            .frame(width: 38, alignment: .trailing)
+                    }
+                    .padding(.top, 4)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
             } header: {
                 Text("画布主题")
             }

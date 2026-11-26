@@ -150,6 +150,11 @@ final class AppSettings {
         didSet { defaults.set(showWordCount, forKey: Keys.showWordCount) }
     }
 
+    /// Controls Liquid Glass translucency-to-frost intensity (0.0 = ultra clear, 1.0 = deep frosted).
+    var glassIntensity: Double {
+        didSet { defaults.set(glassIntensity, forKey: Keys.glassIntensity) }
+    }
+
     private enum Keys {
         static let theme = "lepora.theme"
         static let fontSize = "lepora.fontSize"
@@ -161,6 +166,7 @@ final class AppSettings {
         static let focusMode = "lepora.focusMode"
         static let typewriterMode = "lepora.typewriterMode"
         static let showWordCount = "lepora.showWordCount"
+        static let glassIntensity = "lepora.glassIntensity"
     }
 
     private init() {
@@ -177,6 +183,11 @@ final class AppSettings {
         self.focusMode = defaults.bool(forKey: Keys.focusMode)
         self.typewriterMode = defaults.bool(forKey: Keys.typewriterMode)
         self.showWordCount = defaults.object(forKey: Keys.showWordCount) as? Bool ?? true
+        if let storedGlass = defaults.object(forKey: Keys.glassIntensity) as? Double {
+            self.glassIntensity = min(1.0, max(0.0, storedGlass))
+        } else {
+            self.glassIntensity = 0.45
+        }
     }
 
     var bridgePayload: [String: Any] {

@@ -174,7 +174,13 @@ struct LiquidGlassSidebar: View {
             }
         }
         .frame(width: 244)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .glassEffect(
+            .regular,
+            in: ConcentricRectangle(
+                corners: .concentric(minimum: isFullScreen ? 14 : 10),
+                isUniform: true
+            )
+        )
         .shadow(color: .black.opacity(0.08), radius: 18, x: 0, y: 6)
         .alert("新建 Markdown 笔记", isPresented: $isCreatingFile) {
             TextField("文件名（例如 notes.md）", text: $newFileName)

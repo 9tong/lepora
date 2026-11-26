@@ -3,43 +3,80 @@ import AppKit
 import UniformTypeIdentifiers
 
 /// Native macOS 26/27 translucent Liquid Glass canvas backdrop combining behind-window desktop vibrancy
-/// with Apple's native `NSGlassEffectView` refraction layer so the entire center editor is genuine glass.
+/// with Apple's native `NSGlassEffectView` clear ↔ regular cross-fade driven smoothly by `intensity` (0...1).
 private struct LiquidGlassCanvasBackdrop: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
-        let container = NSView()
-        container.wantsLayer = true
+    let intensity: Double
 
-        // 1. Live behind-window translucent desktop blur (stays rich & luminous even when unfocused)
+    final class BackdropHostView: NSView {
         let behindWindow = NSVisualEffectView()
-        behindWindow.translatesAutoresizingMaskIntoConstraints = false
-        behindWindow.blendingMode = .behindWindow
-        behindWindow.material = .hudWindow
-        behindWindow.state = .active
-        container.addSubview(behindWindow)
+        let clearGlass = NSGlassEffectView()
+        let regularGlass = NSGlassEffectView()
 
-        // 2. Native macOS 26/27 Liquid Glass optical surface layered cleanly over the desktop blur
-        let glass = NSGlassEffectView()
-        glass.translatesAutoresizingMaskIntoConstraints = false
-        glass.style = .clear
-        glass.cornerRadius = 0
-        container.addSubview(glass)
+        override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            wantsLayer = true
 
-        NSLayoutConstraint.activate([
-            behindWindow.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            behindWindow.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            behindWindow.topAnchor.constraint(equalTo: container.topAnchor),
-            behindWindow.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            // 1. Live behind-window translucent desktop blur (stays rich & luminous even when unfocused)
+            behindWindow.translatesAutoresizingMaskIntoConstraints = false
+            behindWindow.blendingMode = .behindWindow
+            behindWindow.material = .hudWindow
+            behindWindow.state = .active
+            addSubview(behindWindow)
 
-            glass.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            glass.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            glass.topAnchor.constraint(equalTo: container.topAnchor),
-            glass.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-        ])
+            // 2. Native macOS 26/27 Clear Liquid Glass optical refraction layer
+            clearGlass.translatesAutoresizingMaskIntoConstraints = false
+            clearGlass.style = .clear
+            clearGlass.cornerRadius = 0
+            addSubview(clearGlass)
 
-        return container
+            // 3. Native macOS 26/27 Regular Liquid Glass layer cross-faded in at higher frosting levels
+            regularGlass.translatesAutoresizingMaskIntoConstraints = false
+            regularGlass.style = .regular
+            regularGlass.cornerRadius = 0
+            addSubview(regularGlass)
+
+            NSLayoutConstraint.activate([
+                behindWindow.leadingAnchor.constraint(equalTo: leadingAnchor),
+                behindWindow.trailingAnchor.constraint(equalTo: trailingAnchor),
+                behindWindow.topAnchor.constraint(equalTo: topAnchor),
+                behindWindow.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+                clearGlass.leadingAnchor.constraint(equalTo: leadingAnchor),
+                clearGlass.trailingAnchor.constraint(equalTo: trailingAnchor),
+                clearGlass.topAnchor.constraint(equalTo: topAnchor),
+                clearGlass.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+                regularGlass.leadingAnchor.constraint(equalTo: leadingAnchor),
+                regularGlass.trailingAnchor.constraint(equalTo: trailingAnchor),
+                regularGlass.topAnchor.constraint(equalTo: topAnchor),
+                regularGlass.bottomAnchor.constraint(equalTo: bottomAnchor),
+            ])
+        }
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+
+        func apply(intensity raw: Double) {
+            let t = CGFloat(min(1.0, max(0.0, raw)))
+            // Continuous 120fps optical modulation: 0.0 = crystal clear water glass -> 1.0 = deep frosted glass
+            behindWindow.alphaValue = 0.36 + t * 0.64
+            clearGlass.alphaValue = max(0.20, 1.0 - t * 0.72)
+            let regularBlend = max(0.0, min(1.0, (t - 0.14) / 0.72))
+            regularGlass.alphaValue = regularBlend
+        }
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {}
+    func makeNSView(context: Context) -> BackdropHostView {
+        let host = BackdropHostView()
+        host.apply(intensity: intensity)
+        return host
+    }
+
+    func updateNSView(_ nsView: BackdropHostView, context: Context) {
+        nsView.apply(intensity: intensity)
+    }
 }
 
 /// Invisible macOS window drag area so the frameless top edge remains effortlessly draggable.
@@ -296,7 +333,24 @@ struct MainWorkspaceView: View {
             .frame(maxWidth: .infinity, alignment: .trailing)
             .ignoresSafeArea(.container, edges: .top)
 
-            // 6. Floating Bottom-Trailing Animated Feather & Transient Toast
+            // 6. Floating Bottom-Center Apple Liquid Glass Intensity Bar (only in Liquid Glass theme)
+            if settings.theme == .translucent {
+                VStack {
+                    Spacer()
+                    LiquidGlassControlBar(
+                        intensity: $settings.glassIntensity,
+                        isTypingMinimalMode: session.isTypingMinimalMode
+                    )
+                    .padding(.bottom, 16)
+                }
+                .padding(.leading, session.isSidebarVisible ? 264 : 0)
+                .padding(.trailing, session.isOutlineVisible ? 226 : 0)
+                .animation(.spring(response: 0.34, dampingFraction: 0.86), value: session.isSidebarVisible)
+                .animation(.spring(response: 0.32, dampingFraction: 0.86), value: session.isOutlineVisible)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+
+            // 7. Floating Bottom-Trailing Animated Feather & Transient Toast
             VStack {
                 Spacer()
                 HStack {
@@ -375,7 +429,17 @@ struct MainWorkspaceView: View {
     private var canvasBackground: some View {
         switch settings.theme {
         case .translucent:
-            LiquidGlassCanvasBackdrop()
+            ZStack {
+                LiquidGlassCanvasBackdrop(intensity: settings.glassIntensity)
+                // Smooth luminance frost veil scaling from 0% (ultra-clear) to ~65% (velvety frosted glass)
+                let t = min(1.0, max(0.0, settings.glassIntensity))
+                let veilOpacity = t * t * 0.56 + t * 0.09
+                (systemColorScheme == .dark
+                    ? Color(red: 0.075, green: 0.082, blue: 0.105)
+                    : Color.white
+                )
+                .opacity(veilOpacity)
+            }
         case .paper:
             Color(red: 0.973, green: 0.961, blue: 0.933)
         case .light:
