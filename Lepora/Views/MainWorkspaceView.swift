@@ -2,17 +2,44 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 
-/// Native macOS 26/27 AppKit `NSGlassEffectView` wrapper used as the subtle translucent canvas
-/// when the user chooses the "液态玻璃" (Liquid Translucent) canvas theme.
+/// Native macOS 26/27 translucent Liquid Glass canvas backdrop combining behind-window desktop vibrancy
+/// with Apple's native `NSGlassEffectView` refraction layer so the entire center editor is genuine glass.
 private struct LiquidGlassCanvasBackdrop: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSGlassEffectView {
+    func makeNSView(context: Context) -> NSView {
+        let container = NSView()
+        container.wantsLayer = true
+
+        // 1. Live behind-window translucent desktop blur (stays rich & luminous even when unfocused)
+        let behindWindow = NSVisualEffectView()
+        behindWindow.translatesAutoresizingMaskIntoConstraints = false
+        behindWindow.blendingMode = .behindWindow
+        behindWindow.material = .hudWindow
+        behindWindow.state = .active
+        container.addSubview(behindWindow)
+
+        // 2. Native macOS 26/27 Liquid Glass optical surface layered cleanly over the desktop blur
         let glass = NSGlassEffectView()
-        glass.style = .regular
+        glass.translatesAutoresizingMaskIntoConstraints = false
+        glass.style = .clear
         glass.cornerRadius = 0
-        return glass
+        container.addSubview(glass)
+
+        NSLayoutConstraint.activate([
+            behindWindow.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            behindWindow.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            behindWindow.topAnchor.constraint(equalTo: container.topAnchor),
+            behindWindow.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+
+            glass.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            glass.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            glass.topAnchor.constraint(equalTo: container.topAnchor),
+            glass.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+        ])
+
+        return container
     }
 
-    func updateNSView(_ nsView: NSGlassEffectView, context: Context) {}
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
 
 /// Invisible macOS window drag area so the frameless top edge remains effortlessly draggable.
@@ -97,6 +124,8 @@ private struct WindowFullscreenObserver: NSViewRepresentable {
             }
             window.titleVisibility = .hidden
             window.titlebarAppearsTransparent = true
+            window.backgroundColor = .clear
+            window.isOpaque = false
         }
 
         nonisolated private func removeObservers() {

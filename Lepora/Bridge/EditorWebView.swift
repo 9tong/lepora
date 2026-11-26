@@ -333,6 +333,7 @@ struct EditorWebView: NSViewRepresentable {
         let webView = LeporaWKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.setValue(false, forKey: "drawsBackground")
+        webView.underPageBackgroundColor = .clear
         webView.allowsBackForwardNavigationGestures = false
 
         context.coordinator.webView = webView

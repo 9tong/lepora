@@ -115,7 +115,8 @@ async function ensureSourceEditor(): Promise<SourceEditorController> {
 // React to macOS system appearance changes dynamically (required by dark-mode guidance!)
 const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
 darkMedia.addEventListener('change', () => {
-  if (document.body.dataset.theme === 'system' || document.body.dataset.theme === 'translucent') {
+  const activeTheme = document.documentElement.dataset.theme || document.body.dataset.theme;
+  if (activeTheme === 'system' || activeTheme === 'translucent') {
     resetMermaidTheme();
     window.dispatchEvent(new Event('lepora-theme-changed'));
   }
@@ -227,7 +228,8 @@ const bridge: LeporaBridgeAPI = {
     let shouldRefreshTheme = false;
     let shouldRefreshMath = false;
 
-    if (prefs.theme && document.body.dataset.theme !== prefs.theme) {
+    if (prefs.theme && (root.dataset.theme !== prefs.theme || document.body.dataset.theme !== prefs.theme)) {
+      root.dataset.theme = prefs.theme;
       document.body.dataset.theme = prefs.theme;
       shouldRefreshTheme = true;
     }
