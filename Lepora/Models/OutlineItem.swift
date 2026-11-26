@@ -29,7 +29,7 @@ enum EditorMode: String, CaseIterable, Sendable {
 
     var iconName: String {
         switch self {
-        case .wysiwyg: "book.open"
+        case .wysiwyg: "book"
         case .source: "chevron.left.forwardslash.chevron.right"
         }
     }

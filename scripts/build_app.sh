@@ -97,16 +97,14 @@ cp "$ROOT_DIR/Lepora/Info.plist" "$CONTENTS/Info.plist"
 
 printf 'APPL????' > "$CONTENTS/PkgInfo"
 
-# 6. Strip Finder/iCloud FileProvider xattrs cleanly via ditto --norsrc, then ad-hoc sign
-TMP_CLEAN="$(mktemp -d)"
+# 6. Strip Finder/iCloud FileProvider xattrs, sign & strictly verify in /tmp (outside iCloud)
+TMP_CLEAN="$(mktemp -d /tmp/lepora-build-sign.XXXXXX)"
+trap 'rm -rf "$TMP_CLEAN"' EXIT
 ditto --norsrc "$APP_BUNDLE" "$TMP_CLEAN/$APP_NAME.app"
 xattr -cr "$TMP_CLEAN/$APP_NAME.app"
+codesign --force --deep --sign - "$TMP_CLEAN/$APP_NAME.app"
+codesign --verify --deep --strict "$TMP_CLEAN/$APP_NAME.app"
 rm -rf "$APP_BUNDLE"
 ditto --norsrc "$TMP_CLEAN/$APP_NAME.app" "$APP_BUNDLE"
-rm -rf "$TMP_CLEAN"
-xattr -cr "$APP_BUNDLE"
-
-codesign --force --deep --sign - "$APP_BUNDLE"
-codesign --verify --deep --strict "$APP_BUNDLE"
 
 echo "==> Built & signed: $APP_BUNDLE"
