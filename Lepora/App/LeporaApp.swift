@@ -49,6 +49,7 @@ struct LeporaApp: App {
                 .frame(minWidth: 780, minHeight: 540)
                 .onAppear {
                     configureWindowAppearance()
+                    Self.syncAppearance(for: settings.theme)
                     Self.syncDockIcon(for: settings.theme)
                     appDelegate.hasUnsavedDocuments = {
                         session.tabs.filter(\.isDirty)
@@ -239,7 +240,9 @@ struct LeporaApp: App {
                     ForEach(EditorTheme.allCases) { theme in
                         Button {
                             settings.theme = theme
+                            Self.syncAppearance(for: theme)
                             session.applySettings(settings)
+                            Self.syncDockIcon(for: theme)
                         } label: {
                             HStack {
                                 Text(theme.displayName)
@@ -275,6 +278,25 @@ struct LeporaApp: App {
 
         Settings {
             SettingsView(settings: settings)
+        }
+    }
+
+    /// Synchronizes AppKit window/app appearance directly instead of relying on SwiftUI's
+    /// `.preferredColorScheme(nil)`, which fails to reset `NSWindow.appearance` back to system on macOS.
+    static func syncAppearance(for theme: EditorTheme) {
+        let target: NSAppearance? = {
+            switch theme {
+            case .system, .translucent:
+                return nil
+            case .light, .paper:
+                return NSAppearance(named: .aqua)
+            case .dark:
+                return NSAppearance(named: .darkAqua)
+            }
+        }()
+        NSApplication.shared.appearance = target
+        for window in NSApplication.shared.windows {
+            window.appearance = nil
         }
     }
 

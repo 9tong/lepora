@@ -28,7 +28,13 @@ struct SettingsView: View {
             }
         }
         .frame(width: 540, height: 430)
-        .preferredColorScheme(settings.theme.preferredColorScheme)
+        .onAppear {
+            LeporaApp.syncAppearance(for: settings.theme)
+        }
+        .onChange(of: settings.theme) {
+            LeporaApp.syncAppearance(for: settings.theme)
+            LeporaApp.syncDockIcon(for: settings.theme)
+        }
     }
 
     // MARK: - 1. 外观

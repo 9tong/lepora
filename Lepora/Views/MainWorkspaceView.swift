@@ -363,8 +363,8 @@ struct MainWorkspaceView: View {
                 .transition(.scale(scale: 0.96).combined(with: .opacity))
             }
         }
-        .preferredColorScheme(settings.theme.preferredColorScheme)
         .onChange(of: settings.theme) {
+            LeporaApp.syncAppearance(for: settings.theme)
             session.applySettings(settings)
             LeporaApp.syncDockIcon(for: settings.theme)
         }
