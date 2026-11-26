@@ -267,14 +267,14 @@ struct MainWorkspaceView: View {
             .frame(maxWidth: .infinity, alignment: .trailing)
             .ignoresSafeArea(.container, edges: .top)
 
-            // 6. Floating Liquid Glass Bottom-Trailing Status & Word Count Capsule
+            // 6. Floating Bottom-Trailing Animated Feather & Transient Toast
             VStack {
                 Spacer()
                 HStack {
                     Spacer()
                     StatusCapsuleView(session: session, settings: settings)
-                        .padding(.trailing, 16)
-                        .padding(.bottom, 14)
+                        .padding(.trailing, 18)
+                        .padding(.bottom, 10)
                 }
             }
 

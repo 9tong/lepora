@@ -48,9 +48,25 @@ enum MathEnginePreference: String, CaseIterable, Identifiable, Sendable {
 
     var displayName: String {
         switch self {
-        case .auto: "自动（KaTeX 主引擎 + MathJax 兜底）"
-        case .katex: "仅 KaTeX（极速轻量）"
-        case .mathjax: "仅 MathJax（完整 AMS 编号）"
+        case .auto: "智能自动（KaTeX + MathJax）"
+        case .katex: "仅 KaTeX"
+        case .mathjax: "仅 MathJax"
+        }
+    }
+
+    var shortTitle: String {
+        switch self {
+        case .auto: "智能自动"
+        case .katex: "仅 KaTeX"
+        case .mathjax: "仅 MathJax"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .auto: "优先极速 KaTeX，遇到复杂 AMS 环境自动切换离线 MathJax SVG"
+        case .katex: "极致轻量与最快渲染速度，适合绝大多数日常公式"
+        case .mathjax: "完整 AMS 环境与公式编号支持，纯离线矢量 SVG 输出"
         }
     }
 }
@@ -64,9 +80,25 @@ enum ImageStorageStrategy: String, CaseIterable, Identifiable, Sendable {
 
     var displayName: String {
         switch self {
-        case .docAssetsFolder: "复制到同级 <文档名>.assets/ 目录（Typora 默认）"
-        case .workspaceAssetsFolder: "统一复制到工作区 assets/ 目录"
-        case .originalPath: "直接引用原始本地路径"
+        case .docAssetsFolder: "同级 <文档名>.assets/ 目录"
+        case .workspaceAssetsFolder: "工作区 assets/ 目录"
+        case .originalPath: "保留原始本地路径"
+        }
+    }
+
+    var shortTitle: String {
+        switch self {
+        case .docAssetsFolder: "同级资源目录"
+        case .workspaceAssetsFolder: "工作区统一目录"
+        case .originalPath: "保留原始路径"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .docAssetsFolder: "自动复制到同级 ./<文档名>.assets/ 目录（Typora 默认）"
+        case .workspaceAssetsFolder: "统一归档至当前工作区 ./assets/ 目录"
+        case .originalPath: "不复制图片文件，直接引用原始本地路径"
         }
     }
 }

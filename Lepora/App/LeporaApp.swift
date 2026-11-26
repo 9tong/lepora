@@ -253,10 +253,10 @@ struct LeporaApp: App {
 
                 Divider()
 
-                Toggle("专注模式 (Focus Mode)", isOn: $settings.focusMode)
+                Toggle("专注模式", isOn: $settings.focusMode)
                     .keyboardShortcut("f", modifiers: [.command, .shift])
 
-                Toggle("打字机居中模式 (Typewriter Mode)", isOn: $settings.typewriterMode)
+                Toggle("打字机模式", isOn: $settings.typewriterMode)
                     .keyboardShortcut("t", modifiers: [.command, .shift])
 
                 Divider()

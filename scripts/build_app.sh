@@ -75,8 +75,13 @@ else
   rm -rf "$ICONSET_TMP"
 fi
 
-# 4. Copy compiled offline EditorBundle
+# 4. Copy compiled offline EditorBundle & Retina floating feather assets
 cp -R "$ROOT_DIR/Lepora/Resources/EditorBundle" "$RES_DIR/EditorBundle"
+for feather in FloatingFeatherLight.png FloatingFeatherDark.png; do
+  if [ -f "$ROOT_DIR/Lepora/Resources/$feather" ]; then
+    cp "$ROOT_DIR/Lepora/Resources/$feather" "$RES_DIR/$feather"
+  fi
+done
 
 # 5. Copy Info.plist & configure bundle icon metadata
 cp "$ROOT_DIR/Lepora/Info.plist" "$CONTENTS/Info.plist"
